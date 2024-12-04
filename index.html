@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 2.5rem;
+            color: #4CAF50;
+        }
+
+        #search-container {
+            text-align: center;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="text"], select {
+            width: 70%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #results {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        #results li {
+            background-color: #fff;
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        #results li h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #4CAF50;
+        }
+
+        #results li p {
+            margin: 5px 0 0;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        #results li.no-result {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+<h1>Book Search</h1>
+<div id="search-container">
+    <input type="text" id="search" placeholder="Search by title or author..." />
+    <select id="category">
+        <option value="">All Categories</option>
+        <option value="Fiction">Fiction</option>
+        <option value="Science">Science</option>
+        <option value="Description">Description</option>
+    </select>
+    <button onclick="performSearch()">Search</button>
+</div>
+<ul id="results"></ul>
+
+
+<script>
+    async function performSearch() {
+        const query = document.getElementById('search').value;
+        const category = document.getElementById('category').value;
+
+        try {
+
+            const response = await fetch(`http://localhost:4000/search?q=${query}&category=${category}`);
+            if (!response.ok) throw new Error('Failed to fetch results');
+
+            const data = await response.json();
+
+
+            const resultsList = document.getElementById('results');
+            resultsList.innerHTML = '';
+
+            if (data.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'No results found.';
+                resultsList.appendChild(li);
+            } else {
+                data.forEach(item => {
+                    const li = document.createElement('li');
+
+
+                    if (item._source.title.toLowerCase().includes(query.toLowerCase())) {
+                        li.textContent = `Author: ${item._source.author}\nDescription: ${item._source.description}`;
+                    } else if (item._source.author.toLowerCase().includes(query.toLowerCase())) {
+                        li.textContent = `Title: ${item._source.title}\nDescription: ${item._source.description}`;
+                    } else {
+                        li.textContent = `Unknown result: ${JSON.stringify(item._source)}`;
+                    }
+
+                    resultsList.appendChild(li);
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+
+            const resultsList = document.getElementById('results');
+            resultsList.innerHTML = '<li>Error fetching results. Please try again later.</li>';
+        }
+    }
+</script>
+</body>
+</html>
